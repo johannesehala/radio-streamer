@@ -40,8 +40,9 @@
 #include "incbin.h"
 INCBIN(Header, "header.bin");
 
-#define DATA_PATCH_LEN     48 // number of data units (a data unit is 2 bytes) in one message, max message payload is ~100 bytes
-#define DATA_PAYLOAD_SIZE    DATA_PATCH_LEN * 2 // Max allowed payload is 114 bytes (comms_get_paylaod_max_length())
+#define DATA_PATCH_LEN     48 // number of data units (a data unit is 2 bytes) in one message
+#define DATA_PAYLOAD_SIZE    (DATA_PATCH_LEN * 2 + 4) // Max allowed payload is 114 bytes (comms_get_paylaod_max_length())
+#define DATA_START_OFFSET   2 // data start offset in msg is 4 bytes, because first 4 bytes are msg nr
 #define DATA_GEN_SPEED      1 // ms, new data is generated every millisecond
 
 static comms_msg_t msg_1, msg_2; // Message 1 and 2
@@ -132,6 +133,8 @@ static comms_layer_t* radio_setup (am_addr_t node_addr)
  *        y-axis values decremented
  *        z-axis values constant
  * 
+ * @note    DATA_START_OFFSET is 4 bytes, since pointer is 16-bit (2bytes) we offset by avalue of 2
+ * 
  * @return  payload_index incremented by number of bytes written to payload
  */
 uint8_t write_new_data(comms_msg_t *msg, uint16_t payload_index)
@@ -140,9 +143,9 @@ uint8_t write_new_data(comms_msg_t *msg, uint16_t payload_index)
 
     // Cast pointer to msg payload area as 16 bit integer, cuz we are writing 16-bit values to payload
     uint16_t *payload = (uint16_t*)comms_get_payload(radio, msg, DATA_PAYLOAD_SIZE);
-    *(payload+payload_index) = hton16(counter_x); // New x axis value
-    *(payload+payload_index+1) = hton16(counter_y); // New y axis value
-    *(payload+payload_index+2) = hton16(counter_z); // New z axis value
+    *(payload+payload_index+DATA_START_OFFSET) = hton16(counter_x); // New x axis value
+    *(payload+payload_index+1+DATA_START_OFFSET) = hton16(counter_y); // New y axis value
+    *(payload+payload_index+2+DATA_START_OFFSET) = hton16(counter_z); // New z axis value
 
     counter_x++;
     counter_y--;    
@@ -151,14 +154,23 @@ uint8_t write_new_data(comms_msg_t *msg, uint16_t payload_index)
     return (uint8_t) payload_index + 3; 
 }
 
+void write_msg_number(comms_msg_t *msg, uint32_t msg_nr)
+{
+    uint32_t *payload = (uint32_t*)comms_get_payload(radio, msg, DATA_PAYLOAD_SIZE);
+    *(payload) = hton32(msg_nr);
+}
+
 void data_gen_loop ()
 {    
     static uint16_t buf_index = 0; // Number of bytes written to msg payload
     static comms_msg_t *msg=&msg_1;
     static databuf_type_t fill_data_buf = MSG_1_PAYLOAD;
-    uint16_t cnt=0;
+    uint32_t msg_count=0;
     
     osDelay(1500);
+    
+    // Write msg number to first msg
+    write_msg_number(msg, msg_count++);
     
     for(;;)
     {
@@ -209,7 +221,8 @@ void data_gen_loop ()
                 if(osMutexAcquire(msg_2_mutex, 1000) == osOK)
                 {
                     fill_data_buf = MSG_2_PAYLOAD;
-                    msg = &msg_2; 
+                    msg = &msg_2;
+                    write_msg_number(msg, msg_count++);
                     buf_index = write_new_data(msg, 0);
                     osMutexRelease(msg_2_mutex);
                     // Trigger message send
@@ -228,6 +241,7 @@ void data_gen_loop ()
                 {
                     fill_data_buf = MSG_1_PAYLOAD;
                     msg = &msg_1; 
+                    write_msg_number(msg, msg_count++); 
                     buf_index = write_new_data(msg, 0);
                     osMutexRelease(msg_1_mutex);
                     // Trigger message send
@@ -248,7 +262,7 @@ void data_send_loop ()
 {
     static uint8_t flags = MSG1_READY_FLAG;
     static comms_msg_t *m_msg;
-    static uint16_t cnt = 0;
+    static uint32_t cnt = 0;
     comms_error_t result;
 
     osDelay(500);
@@ -323,7 +337,7 @@ void data_send_loop ()
             osMutexRelease(msg_2_mutex);
         }
         else info2("%u",flags); // Multiple flags or unknown flags set or error
-        info3("m %u", cnt++);
+        info3("m %lu", cnt++);
     }
 }
 

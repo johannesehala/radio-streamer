@@ -2,7 +2,7 @@
 
 # _______________________ User overridable configuration _______________________
 
-PROJECT_NAME            ?= radiotest
+PROJECT_NAME            ?= receiver
 
 VERSION_MAJOR           ?= 1
 VERSION_MINOR           ?= 0

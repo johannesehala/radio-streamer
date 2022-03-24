@@ -53,8 +53,9 @@ static comms_layer_t* radio;
 
 typedef struct
 {
-    uint32_t bytes;
-    uint32_t data_items;
+    uint8_t bytes;
+    uint8_t data_items;
+    uint32_t msgnr;
     uint16_t x_first;
     uint16_t y_first;
     uint16_t z_first;
@@ -67,11 +68,17 @@ typedef struct
 static void receive_message (comms_layer_t* comms, const comms_msg_t* msg, void* user)
 {
     static msg_content_t msg_cont;
+    static uint32_t msg_nr;
     uint16_t *payload;
+    uint32_t *payload32;
     
     // Get payload length
-    msg_cont.bytes = comms_get_payload_length(comms, msg);
+    msg_cont.bytes = (uint8_t)comms_get_payload_length(comms, msg);
     msg_cont.data_items = (uint8_t) (msg_cont.bytes / 2);
+    
+    payload32 = (uint32_t*)comms_get_payload(comms, msg, msg_cont.bytes);
+    msg_cont.msgnr = ntoh32(*(payload32));
+    
     payload = (uint16_t*)comms_get_payload(comms, msg, msg_cont.bytes);
     
     // Read first 6 bytes and read last 6 btyes
@@ -82,8 +89,10 @@ static void receive_message (comms_layer_t* comms, const comms_msg_t* msg, void*
     msg_cont.y_last = ntoh16(*(payload+msg_cont.data_items-1));
     msg_cont.z_last = ntoh16(*(payload+msg_cont.data_items));
     
+    if(msg_nr != (msg_cont.msgnr - 1))info("Message lost %lu", msg_cont.msgnr-msg_nr);
+    msg_nr = msg_cont.msgnr;
+    
     // Post to queue 
-    //info3("%u - %u", msg_cont.bytes, msg_cont.x_first);
     osMessageQueuePut(dr_queue_id, &msg_cont, 0, 0);
 }
 

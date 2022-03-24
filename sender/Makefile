@@ -2,7 +2,7 @@
 
 # _______________________ User overridable configuration _______________________
 
-PROJECT_NAME            ?= radiotest
+PROJECT_NAME            ?= sender
 
 VERSION_MAJOR           ?= 1
 VERSION_MINOR           ?= 0
@@ -47,7 +47,7 @@ VERBOSE                 ?= 0
 #SILENT                  ?= 1
 
 # This project contains several Makefiles that reference the project root
-ROOT_DIR                ?= $(abspath ../..)
+ROOT_DIR                ?= $(abspath ../../..)
 ZOO                     ?= $(ROOT_DIR)/zoo
 # Destination for build results
 BUILD_BASE_DIR          ?= build
