@@ -33,13 +33,16 @@ CFLAGS                  += -D_RTE_=1
 # If set, disables asserts and debugging, enables optimization
 RELEASE_BUILD           ?= 0
 
-# Set the lll verbosity base level
-#CFLAGS                  += -DBASE_LOG_LEVEL=0xFFFF # Everything
-#SCFLAGS                 += -DBASE_LOG_LEVEL=0      # Nothing
-CFLAGS                  += -DBASE_LOG_LEVEL=LOG_INFO3
-#CFLAGS                  += -DBASE_LOG_LEVEL=0x0050 # (LOG_INFO2 | LOG_INFO_4)
-#CFLAGS                  += -DBASE_LOG_LEVEL=0x0088  # (LOG_DEBUG1 | LOG_INFO1)
+USE_LLL_LOGGING         ?= 0
 
+ifeq ($(USE_LLL_LOGGING),1)
+    # Set the lll verbosity base level
+    #CFLAGS                  += -DBASE_LOG_LEVEL=0xFFFF # Everything
+    #CFLAGS                  += -DBASE_LOG_LEVEL=0      # Nothing
+    CFLAGS                  += -DBASE_LOG_LEVEL=LOG_INFO3
+    #  CFLAGS                  += -DBASE_LOG_LEVEL=0x0050 # (LOG_INFO2 | LOG_INFO_4)
+    #CFLAGS                  += -DBASE_LOG_LEVEL=0x0088  # (LOG_DEBUG1 | LOG_INFO1)
+endif
 
 # Enable debug messages
 VERBOSE                 ?= 0
@@ -89,7 +92,14 @@ NODE_PLATFORM_DIR       := $(ZOO)/thinnect.node-platform
 
 # ______________ Build components - sources and includes _______________________
 
-SOURCES += rctl_main.c
+
+ifeq ($(USE_LLL_LOGGING),1)
+    SOURCES += receiver_lll_main.c
+else
+   SOURCES += receiver_ldma_main.c \
+               ldma_handler.c \
+               ldma_descriptors.c
+endif
 
 # FreeRTOS
 FREERTOS_DIR ?= $(ZOO)/FreeRTOS-Kernel
@@ -142,15 +152,21 @@ SOURCES += \
     $(NODE_PLATFORM_DIR)/common/radio_seqNum.c \
     $(NODE_PLATFORM_DIR)/common/sys_panic.c \
 
-# logging
-#CFLAGS += -DLOGGER_TIMESTAMP
-CFLAGS  += -DLOGGER_FWRITE
-SOURCES += $(NODE_PLATFORM_DIR)/silabs/logger_fwrite.c
-#CFLAGS  += -DLOGGER_LDMA_BUFFER_LENGTH=16384
-#CFLAGS  += -DLOGGER_LDMA
-#SOURCES += $(NODE_PLATFORM_DIR)/silabs/logger_ldma.c
-SOURCES += $(ZOO)/thinnect.lll/logging/loggers_ext.c
-INCLUDES += -I$(ZOO)/thinnect.lll/logging
+ifeq ($(USE_LLL_LOGGING),1)
+    # logging
+    CFLAGS += -DLOGGER_TIMESTAMP
+    CFLAGS  += -DLOGGER_FWRITE
+    SOURCES += $(NODE_PLATFORM_DIR)/silabs/logger_fwrite.c
+    CFLAGS  += -DLOGGER_LDMA_BUFFER_LENGTH=16384
+    CFLAGS  += -DLOGGER_LDMA
+    SOURCES += $(NODE_PLATFORM_DIR)/silabs/logger_ldma.c
+    SOURCES += $(ZOO)/thinnect.lll/logging/loggers_ext.c
+    INCLUDES += -I$(ZOO)/thinnect.lll/logging
+else
+    # This needs to be included because some source files have included it (though they shouldn't)
+    INCLUDES += -I$(ZOO)/thinnect.lll/logging
+endif
+
 
 # device signature
 INCLUDES += -I$(ZOO)/thinnect.device-signature/signature \
