@@ -110,18 +110,15 @@ static comms_layer_t* radio_setup (am_addr_t node_addr)
     {
         return NULL;
     }
-
     if (COMMS_SUCCESS != comms_start(radio, radio_start_done, NULL))
     {
         return NULL;
     }
-
     // Wait for radio to start, could use osTreadFlagWait and set from callback
     while(COMMS_STARTED != comms_status(radio))
     {
         osDelay(1);
     }
-
     comms_register_recv(radio, &rcvr, receive_message, NULL, AMID_RADIO_COUNT_TO_LEDS);
     debug1("radio rdy");
     return radio;

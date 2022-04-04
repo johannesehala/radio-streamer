@@ -1,40 +1,28 @@
-# RadioCountToLeds
+# RadioThroughputTest
 
-RadioCountToLeds is a simple radio broadcast demo application. It runs a 4 Hz
-counter and broadcasts the value every time it is updated. When the application
-hears a packet from another node, it displays the value from the packet using
-its LEDs. The number of displayed bits depends on the number of LEDs on a
-particular platform (max 8). The application is intended to test and demonstrate
-how the system is set up, how threads, timers and the radio work.
-
-The application is compatible with the TinyOS RadioCountToLeds application
-and protocol, it has been briefly tested against an IRIS node.
-
-https://github.com/tinyos/tinyos-main/tree/master/apps/RadioCountToLeds
-
-# Work in progress
-The application mainly demonstrates radio functionality on top of the MistComm
-API, but the MistComm API still has some issues and therefore the way it is used
-will change before the 1.0 release. Keep checking this exaple app to keep up
-with changes and improvements.
-
-# Platforms
-The application has been tested and should work with the following platforms:
- * Thinnect TestSystemBoard0 (tsb0)
- * Thinnect TestSystemBoard2 (tsb2)
- * SiLabs Thunderboard Sense (thunderboard)
- * SiLabs Thunderboard Sense 2 (thunderboard2)
- * SiLabs BRD4001A + BRD4161A (brd4161a-mb)
- * SiLabs BRD4001A + BRD4162A (brd4162a-mb)
- * SiLabs BRD4001A + BRD4304A (brd4304a-mb)
-
-TODO Series2 boards:
- * SiLabs BRD4001A + BRD4180A (brd4180a-mb)
+Sends lots of bytes over radio.
+Receives said bytes over radio.
+Checks for lost messages on receiver side.
+Forwards received bytes to serial-USB.
+Inserts tokens into serial byte stream.
 
 # Build
+Add this project to the node-apps project under apps directory.
+
 Standard build options apply, check the main [README](../../README.md).
 Additionally the device address can be set at compile time, see
 [the next chapter](#device_address_/_signature) for details.
+
+# Platforms
+Can be built for tsb0 and smnt-mb (both tested). Builds for tsb0
+out of the box (ie using a standard node-apps project main branch).
+
+# TODO tsb0 can't build if thinnect.smenete-platforms is not added to zoo
+
+Building for smnt-mb requires three changes to node-apps project:
+  1. Add submodule https://github.com/thinnect/smenete-platforms to zoo. 
+  2. submodule zoo/thinnect.node-platform HEAD must be moved to git commit 2aa4ab7
+  3. submodule zoo/thinnect.dev-platforms HEAD must be moved to git commit 7308efd.
 
 # Device address / signature
 

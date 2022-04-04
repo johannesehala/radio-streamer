@@ -25,7 +25,7 @@ void LDMA_IRQHandler(void)
     /* Loop here on an LDMA error to enable debugging. */
     while (pending & LDMA_IF_ERROR) 
     {
-        PLATFORM_LedsSet(PLATFORM_LedsGet()^4);
+        PLATFORM_LedsSet(PLATFORM_LedsGet() | 0x01);
     }
 
     if(pending & ACC_LDMA_CHANNEL_UART_MASK)
@@ -55,7 +55,7 @@ void ldma_init (void)
  */
 void ldma_uart_start(LDMA_Descriptor_t* uartDescriptor)
 {
-    LDMA_TransferCfg_t memToUartCfg = LDMA_TRANSFER_CFG_PERIPHERAL(ldmaPeripheralSignal_USART0_TXBL);
+    LDMA_TransferCfg_t memToUartCfg = LDMA_TRANSFER_CFG_PERIPHERAL(CNF_LDMA_PERIPHERAL_SIGNAL);
 
     LDMA_IntEnable(ACC_LDMA_CHANNEL_UART_MASK);
     

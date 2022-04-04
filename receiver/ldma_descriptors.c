@@ -67,7 +67,7 @@ LDMA_Descriptor_t* msg_descriptor_config(uint32_t* bufAddr, uint32_t payload_len
         msgToUartDsc[i].xfer.size           = ldmaCtrlSizeHalf; // Transfer 2 bytes at a time (half-word).
         msgToUartDsc[i].xfer.dstInc         = ldmaCtrlDstIncNone; // Don't increment UART TX buffer.
         msgToUartDsc[i].xfer.dstAddrMode    = ldmaCtrlDstAddrModeAbs;
-        msgToUartDsc[i].xfer.dstAddr        = (uint32_t)&USART0->TXDOUBLE; // UART TX buffer address for half-word data.
+        msgToUartDsc[i].xfer.dstAddr        = (uint32_t)&USART_FOR_LDMA->TXDOUBLE; // UART TX buffer address for half-word data.
         msgToUartDsc[i].xfer.linkAddr       = 4; // Point to next descriptor.
         msgToUartDsc[i].xfer.linkMode       = ldmaLinkModeRel;
 
@@ -113,7 +113,7 @@ LDMA_Descriptor_t* token_descriptor_config(uint32_t* bufAddr, uint32_t data_len_
     tokenToUartDsc.xfer.size           = ldmaCtrlSizeHalf; // Transfer 2 bytes at a time (half-word).
     tokenToUartDsc.xfer.dstInc         = ldmaCtrlDstIncNone; // Don't increment UART TX buffer.
     tokenToUartDsc.xfer.dstAddrMode    = ldmaCtrlDstAddrModeAbs;
-    tokenToUartDsc.xfer.dstAddr        = (uint32_t)&USART0->TXDOUBLE; // UART TX buffer address for half-word data.
+    tokenToUartDsc.xfer.dstAddr        = (uint32_t)&USART_FOR_LDMA->TXDOUBLE; // UART TX buffer address for half-word data.
     tokenToUartDsc.xfer.linkAddr       = 4; // Point to next descriptor.
     tokenToUartDsc.xfer.linkMode       = ldmaLinkModeRel;
     tokenToUartDsc.xfer.srcAddrMode    = ldmaCtrlSrcAddrModeAbs;

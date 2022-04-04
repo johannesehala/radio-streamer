@@ -22,7 +22,8 @@ CFLAGS                  += -Wall -std=c99
 CFLAGS                  += -ffunction-sections -fdata-sections -ffreestanding -fsingle-precision-constant -Wstrict-aliasing=0
 CFLAGS                  += -DconfigUSE_TICKLESS_IDLE=0
 CFLAGS                  += -D__START=main -D__STARTUP_CLEAR_BSS
-CFLAGS                  += -DVTOR_START_LOCATION=$(APP_START)
+CFLAGS                  += -DVTOR_START_LOCATION=$(APP_START) -Wl,--section-start=.text=$(APP_START)
+
 LDFLAGS                 += -nostartfiles -Wl,--gc-sections -Wl,--relax -Wl,-Map=$(@:.elf=.map),--cref -Wl,--wrap=atexit -specs=nosys.specs
 LDLIBS                  += -lgcc -lm
 INCLUDES                += -Xassembler -I$(BUILD_DIR) -I.
@@ -74,7 +75,7 @@ SILABS_SDKDIR           ?= $(HOME)/SimplicityStudio_v5/developer/sdks/gecko_sdk_
 
 BUILD_DIR                = $(BUILD_BASE_DIR)/$(BUILD_TARGET)
 BUILDSYSTEM_DIR         := $(ZOO)/thinnect.node-buildsystem/make
-PLATFORMS_DIRS          := $(ZOO)/thinnect.node-buildsystem/make $(ZOO)/thinnect.dev-platforms/make
+PLATFORMS_DIRS          := $(ZOO)/thinnect.node-buildsystem/make $(ZOO)/thinnect.dev-platforms/make $(ZOO)/thinnect.smenete-platforms/make
 PHONY_GOALS             := all clean
 TARGETLESS_GOALS        += clean
 UUID_APPLICATION        := d709e1c5-496a-4d31-8957-f389d7fdbb71
