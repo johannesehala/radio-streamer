@@ -37,7 +37,7 @@ void sigint_handler(int sig)
 
 int main(int argc, char **argv) 
 {
-	int i, bytes;
+	int i, bytes, total_bytes;
 	bool firsttime = true;
 	char filename[NUM_FILE_NAME_CHARACTERS];
 
@@ -77,7 +77,9 @@ int main(int argc, char **argv)
 			}
 			else ;
 			bytes++;
+			total_bytes++;
 			write_to_log();
+			if(total_bytes%100000 == 0)printf("Bytes received so far %u\n", total_bytes);
 		}
 	}
 	return 0;
