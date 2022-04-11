@@ -69,7 +69,7 @@ static void receive_message (comms_layer_t* comms, const comms_msg_t* msg, void*
     res = osMessageQueuePut(dr_queue_id, comms_get_payload(comms, msg, plen), 0, 0);
     if(res != osOK)
     {
-        PLATFORM_LedsSet(PLATFORM_LedsGet() | 0x01);
+        //PLATFORM_LedsSet(PLATFORM_LedsGet() | 0x02);
         //info3("queue put error");
     }
 }
@@ -112,21 +112,30 @@ static comms_layer_t* radio_setup (am_addr_t node_addr)
  */
 void data_receive_loop ()
 {
+    #define LDMA_READY_FLAG         0x04
+    #define LDMA_READY_WAIT_TIME    500 // Kernel ticks
+    
     static uint8_t msg[MAX_PAYLOAD_SIZE];
     static const uint16_t token[] = {0xDEAD, 0xBEEF};
-    uint32_t msg_nr, last_msg_nr;
+    uint32_t msg_nr, last_msg_nr, tf_wait;
     
     osDelay(500);
     
-    ldma_init();
+    ldma_init(dr_thread_id, LDMA_READY_FLAG);
     ldma_uart_start(token_descriptor_config((uint32_t *)token, 4));
     
     for(;;)
     {
         // TOKEN TEST
-        //osDelay(1000);
-        //if(!ldma_busy())ldma_uart_start(token_descriptor_config((uint32_t *)token, 4));
-        //else PLATFORM_LedsSet(PLATFORM_LedsGet() | 0x01);
+        /*osDelay(10);
+        *((uint32_t*)msg) = hton32(0xDEADBEEF);
+        tf_wait = osThreadFlagsWait(LDMA_READY_FLAG, osFlagsWaitAny, LDMA_READY_WAIT_TIME);
+        if(tf_wait == LDMA_READY_FLAG)
+        {
+            ldma_uart_start(msg_descriptor_config(((uint32_t*)msg), 100));
+            PLATFORM_LedsSet(PLATFORM_LedsGet() ^ 0x01);
+        }
+        else;*/
         
         if(osMessageQueueGet(dr_queue_id, &msg, NULL, 3000) == osOK)
         {
@@ -140,20 +149,20 @@ void data_receive_loop ()
             
             // Write bytes to serial using ldma
             // ldma also converts network byte order to host byte order
-            if(!ldma_busy())
+            *((uint32_t*)msg) = hton32(0xDEADBEEF);
+            tf_wait = osThreadFlagsWait(LDMA_READY_FLAG, osFlagsWaitAll, LDMA_READY_WAIT_TIME);
+            if(tf_wait == LDMA_READY_FLAG)
             {
-                ldma_uart_start(msg_descriptor_config(((uint32_t*)msg)+1, 96));
+                ldma_uart_start(msg_descriptor_config(((uint32_t*)msg), 100));
                 //info3("send bytes %lu - %u", ((uint16_t*)msg)+4, ntoh16(*(((uint16_t*)msg)+4)));
-                PLATFORM_LedsSet(PLATFORM_LedsGet() ^ 0x04);
+                PLATFORM_LedsSet(PLATFORM_LedsGet() ^ 0x01);
             }
             else
             {
-                PLATFORM_LedsSet(PLATFORM_LedsGet() | 0x01);
                 //info3("ldma busy error");
             }
         }
         else ;//info3("No msg yet");
-        osDelay (10000);
     }
 }
 

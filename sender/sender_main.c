@@ -334,7 +334,9 @@ void data_send_loop ()
             osMutexRelease(msg_2_mutex);
         }
         else info2("%u",flags); // Multiple flags or unknown flags set or error
-        info3("m %lu", cnt++);
+        
+        if(!(cnt%100))info3("m %lu", cnt++); //print every 100th message
+        else cnt++;
     }
 }
 

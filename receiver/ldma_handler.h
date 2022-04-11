@@ -12,8 +12,9 @@
 
 #include "em_ldma.h"
 #include "retargetserialconfig.h"
+#include "cmsis_os2.h"
 
-#define ACC_LDMA_CHANNEL_UART	        6 // Channel number 0...7
+#define ACC_LDMA_CHANNEL_UART	        2 // Channel number 0...7
 #define ACC_LDMA_CHANNEL_UART_MASK      (1 << ACC_LDMA_CHANNEL_UART)
 
 // tsb0 and smnt-mb platforms use different USART for log communication
@@ -26,7 +27,7 @@
     #error "Unknown USART used for logging. Check retargetserialconfig.h."
 #endif
 
-void ldma_init (void);
+void ldma_init (osThreadId_t thread_id, uint32_t thread_flag);
 void ldma_uart_start (LDMA_Descriptor_t* uartDescriptor);
 void ldma_uart_stop ();
 bool ldma_busy();
